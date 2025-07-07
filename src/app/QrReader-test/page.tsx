@@ -5,12 +5,16 @@ import { Html5QrcodeScanner } from "html5-qrcode";
 
 export default function QRScannerComponent() {
   useEffect(() => {
-    const scanner = new Html5QrcodeScanner("qr-reader", {
-      fps: 10,
-      qrbox: { width: 250, height: 250 },
-      rememberLastUsedCamera: true,
-      supportedScanTypes: [Html5QrcodeScanner.SCAN_TYPE_CAMERA]
-    }, false);
+    const scanner = new Html5QrcodeScanner(
+      "qr-reader",
+      {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        rememberLastUsedCamera: true,
+      },
+      false
+    );
+    
 
     scanner.render(
       (decodedText) => {
