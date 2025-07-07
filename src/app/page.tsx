@@ -25,7 +25,7 @@ export default function POSPage() {
     if (!targetCode) return;
   
     try {
-      const res = await fetch(`https://posapp-backend.onrender.com/product?code=${targetCode}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/product?code=${targetCode}`);
       if (!res.ok) throw new Error("商品が見つかりません");
       const data = await res.json();
       setProduct(data);
