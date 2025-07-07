@@ -35,7 +35,7 @@ export default function POSPage() {
       setProduct(null);
       setError("商品マスタ未登録です");
     }
-  }, [code]);  // ここが依存配列。codeが変わったら再生成
+  }, []);  // ここが依存配列。codeが変わったら再生成
 
   useEffect(() => {
     if (readerVisible && scannerRef.current) {
@@ -116,7 +116,7 @@ export default function POSPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:8000/purchase?emp_cd=9999999999&store_cd=001&pos_no=001`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/purchase?emp_cd=9999999999&store_cd=001&pos_no=001`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

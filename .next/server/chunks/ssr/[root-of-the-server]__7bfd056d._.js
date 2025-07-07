@@ -37,7 +37,7 @@ function POSPage() {
         const targetCode = inputCode?.trim().replace(/\r|\n/g, "") || code.trim();
         if (!targetCode) return;
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/product?code=${targetCode}`);
+            const res = await fetch(`${("TURBOPACK compile-time value", "https://posapp-backend.onrender.com")}/product?code=${targetCode}`);
             if (!res.ok) throw new Error("商品が見つかりません");
             const data = await res.json();
             setProduct(data);
