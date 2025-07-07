@@ -88,7 +88,7 @@ export default function POSPage() {
     const newQty = (quantities[code] || 0) + delta;
     if (newQty <= 0) {
       setList(list.filter((item) => item.CODE !== code));
-      const { [code]: _unused, ...rest } = quantities;
+      const { [code]: __unused, ...rest } = quantities;
       setQuantities(rest);
     } else {
       setQuantities({ ...quantities, [code]: newQty });
@@ -97,7 +97,7 @@ export default function POSPage() {
 
   const handleRemove = (code: string) => {
     setList(list.filter((item) => item.CODE !== code));
-    const { [code]: _unused, ...rest } = quantities;
+    const { [code]: __unused, ...rest } = quantities;
     setQuantities(rest);
   };
 
