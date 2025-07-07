@@ -10,7 +10,7 @@ export default function QRScannerComponent() {
       qrbox: { width: 250, height: 250 },
       rememberLastUsedCamera: true,
       supportedScanTypes: [Html5QrcodeScanner.SCAN_TYPE_CAMERA]
-    });
+    }, false);
 
     scanner.render(
       (decodedText) => {
