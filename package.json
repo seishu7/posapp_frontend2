@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@blackbox-vision/react-qr-reader": "^5.0.0",
     "html5-qrcode": "^2.3.8",
     "next": "15.3.3",
     "react": "^18.2.0",
