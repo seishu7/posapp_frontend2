@@ -5,16 +5,15 @@ import { Html5QrcodeScanner } from "html5-qrcode";
 
 export default function QRScannerComponent() {
   useEffect(() => {
-    const scanner = new Html5QrcodeScanner("qr-reader", {  // ← IDを一致させた
+    const scanner = new Html5QrcodeScanner("qr-reader", {
       fps: 10,
       qrbox: { width: 300, height: 100 },
       rememberLastUsedCamera: true,
-    }, false); // ← 3つ目の引数を明示
+    }, false); // ← 第3引数を必ず追加
 
     scanner.render(
       (decodedText) => {
         console.log("✅ スキャン成功:", decodedText);
-        // setCode(decodedText) などに処理をつなげてもOK
       },
       (errorMessage) => {
         console.warn("検出失敗:", errorMessage);
@@ -29,7 +28,7 @@ export default function QRScannerComponent() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center space-y-4">
       <h1 className="text-xl font-bold">QRコードスキャナ</h1>
-      <div id="qr-reader" style={{ width: "300px" }} /> {/* ← IDが "qr-reader" */}
+      <div id="qr-reader" style={{ width: "300px" }} />
     </div>
   );
 }
