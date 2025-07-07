@@ -28,7 +28,7 @@ export default function POSPage() {
           qrbox: { width: 300, height: 100 },
           rememberLastUsedCamera: true,
           aspectRatio: 1.5,
-        });
+        }, false);
 
         scannerInstance.current.render(
           (decodedText) => {
