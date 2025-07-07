@@ -20,6 +20,23 @@ export default function POSPage() {
   const scannerRef = useRef<HTMLDivElement>(null);
   const scannerInstance = useRef<Html5QrcodeScanner | null>(null);
 
+  const handleRead = useCallback(async (inputCode?: string) => {
+    const targetCode = inputCode?.trim().replace(/\r|\n/g, "") || code.trim();
+    if (!targetCode) return;
+  
+    try {
+      const res = await fetch(`http://localhost:8000/product?code=${targetCode}`);
+      if (!res.ok) throw new Error("商品が見つかりません");
+      const data = await res.json();
+      setProduct(data);
+      setError("");
+    } catch (err) {
+      console.error("❌ 検索エラー:", err);
+      setProduct(null);
+      setError("商品マスタ未登録です");
+    }
+  }, [code]);  // ここが依存配列。codeが変わったら再生成
+
   useEffect(() => {
     if (readerVisible && scannerRef.current) {
       if (!scannerInstance.current) {
@@ -51,22 +68,7 @@ export default function POSPage() {
     };
   }, [readerVisible, handleRead]);  // ← ここに handleRead を追加
 
-  const handleRead = useCallback(async (inputCode?: string) => {
-    const targetCode = inputCode?.trim().replace(/\r|\n/g, "") || code.trim();
-    if (!targetCode) return;
   
-    try {
-      const res = await fetch(`http://localhost:8000/product?code=${targetCode}`);
-      if (!res.ok) throw new Error("商品が見つかりません");
-      const data = await res.json();
-      setProduct(data);
-      setError("");
-    } catch (err) {
-      console.error("❌ 検索エラー:", err);
-      setProduct(null);
-      setError("商品マスタ未登録です");
-    }
-  }, [code]);  // ここが依存配列。codeが変わったら再生成
 
   const handleAdd = () => {
     if (!product) return;
