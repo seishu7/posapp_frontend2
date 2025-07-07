@@ -19,7 +19,7 @@ export default function QRScannerComponent() {
       },
       (errorMessage) => {
         // 検出できなかった場合の軽微なエラー
-        // console.warn("検出失敗:", errorMessage);
+        console.warn("検出失敗:", errorMessage);
       }
     );
 

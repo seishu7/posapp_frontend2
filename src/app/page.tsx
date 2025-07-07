@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 
 type Product = {
@@ -49,12 +49,12 @@ export default function POSPage() {
         scannerInstance.current = null;
       }
     };
-  }, [readerVisible]);
+  }, [readerVisible, handleRead]);  // ← ここに handleRead を追加
 
-  const handleRead = async (inputCode?: string) => {
+  const handleRead = useCallback(async (inputCode?: string) => {
     const targetCode = inputCode?.trim().replace(/\r|\n/g, "") || code.trim();
     if (!targetCode) return;
-
+  
     try {
       const res = await fetch(`http://localhost:8000/product?code=${targetCode}`);
       if (!res.ok) throw new Error("商品が見つかりません");
@@ -66,7 +66,7 @@ export default function POSPage() {
       setProduct(null);
       setError("商品マスタ未登録です");
     }
-  };
+  }, [code]);  // ここが依存配列。codeが変わったら再生成
 
   const handleAdd = () => {
     if (!product) return;
@@ -88,7 +88,7 @@ export default function POSPage() {
     const newQty = (quantities[code] || 0) + delta;
     if (newQty <= 0) {
       setList(list.filter((item) => item.CODE !== code));
-      const { [code]: _, ...rest } = quantities;
+      const { [code]: _unused, ...rest } = quantities;
       setQuantities(rest);
     } else {
       setQuantities({ ...quantities, [code]: newQty });
@@ -97,7 +97,7 @@ export default function POSPage() {
 
   const handleRemove = (code: string) => {
     setList(list.filter((item) => item.CODE !== code));
-    const { [code]: _, ...rest } = quantities;
+    const { [code]: _unused, ...rest } = quantities;
     setQuantities(rest);
   };
 
