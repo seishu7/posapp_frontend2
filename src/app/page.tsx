@@ -35,7 +35,7 @@ export default function POSPage() {
       setProduct(null);
       setError("商品マスタ未登録です");
     }
-  }, []);  // ここが依存配列。codeが変わったら再生成
+  }, [code]);  // ここが依存配列。codeが変わったら再生成
 
   useEffect(() => {
     if (readerVisible && scannerRef.current) {
@@ -138,6 +138,9 @@ export default function POSPage() {
     (sum, item) => sum + item.PRICE * (quantities[item.CODE] || 0),
     0
   );
+
+  console.log("📦 API URL:", process.env.NEXT_PUBLIC_API_BASE_URL);
+
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6 max-w-xl mx-auto space-y-6">
