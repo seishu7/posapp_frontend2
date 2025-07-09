@@ -134,13 +134,6 @@ export default function POSPage() {
   };
 
   const handlePurchase = async () => {
-    const productList = list.flatMap((item) =>
-      Array(quantities[item.CODE]).fill({
-        CODE: item.CODE,
-        NAME: item.NAME,
-        PRICE: item.PRICE,
-      })
-    );
   
     const payload = {
       emp_cd: "9999999999",
