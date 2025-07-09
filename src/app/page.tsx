@@ -1,12 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import {
-  Html5QrcodeScanner,
-  Html5QrcodeSupportedFormats,
-  Html5QrcodeScanType,
-} from "html5-qrcode";
-
+import React, { useEffect, useRef, useState } from "react";
+import { BrowserMultiFormatReader } from "@zxing/browser";
 
 type Product = {
   CODE: string;
@@ -20,15 +15,18 @@ export default function POSPage() {
   const [error, setError] = useState("");
   const [list, setList] = useState<Product[]>([]);
   const [quantities, setQuantities] = useState<{ [code: string]: number }>({});
-  const [readerVisible, setReaderVisible] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const scannerRef = useRef<BrowserMultiFormatReader | null>(null);
+  const [scanning, setScanning] = useState(false);
 
-  const scannerRef = useRef<HTMLDivElement>(null);
-  const scannerInstance = useRef<Html5QrcodeScanner | null>(null);
+  const handleRead = async (scannedCode: string) => {
+    const targetCode = scannedCode.trim();
+    if (targetCode.length !== 13 || !/^\d+$/.test(targetCode)) {
+      console.warn("⚠️ 無効なバーコード:", targetCode);
+      setError("無効なバーコードです");
+      return;
+    }
 
-  const handleRead = useCallback(async (inputCode?: string) => {
-    const targetCode = inputCode?.trim().replace(/\r|\n/g, "") || code.trim();
-    if (!targetCode) return;
-  
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/product?code=${targetCode}`);
       if (!res.ok) throw new Error("商品が見つかりません");
@@ -40,55 +38,32 @@ export default function POSPage() {
       setProduct(null);
       setError("商品マスタ未登録です");
     }
-  }, [code]);  // ここが依存配列。codeが変わったら再生成
+  };
 
   useEffect(() => {
-    if (readerVisible && scannerRef.current) {
-      if (!scannerInstance.current) {
-        scannerInstance.current = new Html5QrcodeScanner(
-          "reader",
-          {
-            fps: 10,
-            qrbox: { width: 300, height: 100 },
-            rememberLastUsedCamera: true,
-            aspectRatio: 1.5,
-            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-            formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13], // ← 追加
-          },
-          false
-        );
-        
+    if (!scanning) return;
 
-        scannerInstance.current.render(
-          (decodedText) => {
-            const cleaned = decodedText.trim().replace(/\r|\n/g, "");
-        
-            // 13桁のJANコードでなければ無視
-            if (!/^\d{13}$/.test(cleaned)) {
-              console.warn("⚠️ 無効なバーコードが読み取られました:", cleaned);
-              return;
-            }
-        
-            setCode(cleaned);
-            handleRead(cleaned);
-          },
-          (err) => {
-            console.warn("スキャンエラー:", err);
-          }
-        );
-        
-      }
-    }
+    const scanner = new BrowserMultiFormatReader();
+    scannerRef.current = scanner;
+
+    scanner
+      .decodeFromVideoDevice(null, videoRef.current!, (result, err) => {
+        if (result) {
+          const raw = result.getText();
+          console.log("✅ ZXing 読み取り結果:", raw);
+          scanner.stopContinuousDecode();
+          setScanning(false);
+          handleRead(raw);
+        }
+      })
+      .catch((err) => {
+        console.error("📷 カメラ初期化エラー:", err);
+      });
 
     return () => {
-      if (scannerInstance.current) {
-        scannerInstance.current.clear().catch(console.error);
-        scannerInstance.current = null;
-      }
+      scannerRef.current?.reset();
     };
-  }, [readerVisible, handleRead]);  // ← ここに handleRead を追加
-
-  
+  }, [scanning]);
 
   const handleAdd = () => {
     if (!product) return;
@@ -110,8 +85,7 @@ export default function POSPage() {
     const newQty = (quantities[code] || 0) + delta;
     if (newQty <= 0) {
       setList(list.filter((item) => item.CODE !== code));
-      const { [code]: __unused, ...rest } = quantities;
-      console.log(__unused);
+      const { [code]: __, ...rest } = quantities;
       setQuantities(rest);
     } else {
       setQuantities({ ...quantities, [code]: newQty });
@@ -120,8 +94,7 @@ export default function POSPage() {
 
   const handleRemove = (code: string) => {
     setList(list.filter((item) => item.CODE !== code));
-    const { [code]: __unused, ...rest } = quantities;
-    console.log(__unused);
+    const { [code]: __, ...rest } = quantities;
     setQuantities(rest);
   };
 
@@ -145,7 +118,7 @@ export default function POSPage() {
       );
       if (!res.ok) throw new Error("購入登録に失敗しました");
       const data = await res.json();
-      alert(`\uD83D\uDCDD ご注文ありがとうございました！\n合計金額: ￥${data.total_amount} 円`);
+      alert(`🧾 ご注文ありがとうございました！\n合計金額: ￥${data.total_amount} 円`);
       setList([]);
       setQuantities({});
     } catch (err) {
@@ -159,27 +132,18 @@ export default function POSPage() {
     0
   );
 
-  console.log("📦 API URL:", process.env.NEXT_PUBLIC_API_BASE_URL);
-
-
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6 max-w-xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-center">POSレジシステム</h1>
+      <h1 className="text-2xl font-bold text-center">POSレジシステム（ZXing版）</h1>
 
       <div className="bg-gray-800 p-4 rounded shadow space-y-3">
         <button
-          onClick={() => setReaderVisible(!readerVisible)}
+          onClick={() => setScanning(!scanning)}
           className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded w-full"
         >
-          スキャン（カメラ）
+          {scanning ? "スキャン停止" : "スキャン開始"}
         </button>
-        {readerVisible && (
-          <div
-            id="reader"
-            ref={scannerRef}
-            className="w-full h-[300px] bg-black rounded overflow-hidden"
-          />
-        )}
+        {scanning && <video ref={videoRef} className="w-full h-[300px] bg-black rounded" />}
       </div>
 
       {product && (
