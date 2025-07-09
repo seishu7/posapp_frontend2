@@ -50,7 +50,10 @@ export default function POSPage() {
           "reader",
           {
             fps: 10,
-            qrbox: { width: 300, height: 150 },
+            qrbox: window.innerWidth < 768
+          ? { width: 250, height: 120 } // モバイルサイズ
+          : { width: 300, height: 150 }, // デスクトップ
+
             aspectRatio: 1.5,
             supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
             formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13], // ← 追加
