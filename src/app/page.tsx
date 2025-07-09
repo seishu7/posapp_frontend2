@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import {
+  Html5QrcodeScanner,
+  Html5QrcodeSupportedFormats,
+  Html5QrcodeScanType,
+} from "html5-qrcode";
+
 
 type Product = {
   CODE: string;
@@ -40,16 +45,30 @@ export default function POSPage() {
   useEffect(() => {
     if (readerVisible && scannerRef.current) {
       if (!scannerInstance.current) {
-        scannerInstance.current = new Html5QrcodeScanner("reader", {
-          fps: 10,
-          qrbox: { width: 300, height: 100 },
-          rememberLastUsedCamera: true,
-          aspectRatio: 1.5,
-        }, false);
+        scannerInstance.current = new Html5QrcodeScanner(
+          "reader",
+          {
+            fps: 10,
+            qrbox: { width: 300, height: 100 },
+            rememberLastUsedCamera: true,
+            aspectRatio: 1.5,
+            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+            formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13], // ← 追加
+          },
+          false
+        );
+        
 
         scannerInstance.current.render(
           (decodedText) => {
             const cleaned = decodedText.trim().replace(/\r|\n/g, "");
+        
+            // 13桁のJANコードでなければ無視
+            if (!/^\d{13}$/.test(cleaned)) {
+              console.warn("⚠️ 無効なバーコードが読み取られました:", cleaned);
+              return;
+            }
+        
             setCode(cleaned);
             handleRead(cleaned);
           },
@@ -57,6 +76,7 @@ export default function POSPage() {
             console.warn("スキャンエラー:", err);
           }
         );
+        
       }
     }
 
