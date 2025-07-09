@@ -56,11 +56,11 @@ export default function POSPage() {
           handleRead(raw);
         }
       })
+
       .catch((err) => {
-        console.error("エラー:", err); // ← これで使ったことになる
+        console.error("エラー:", err);
       });
-      
-      
+         
 
     return () => {
       scannerRef.current?.reset();
