@@ -53,7 +53,7 @@ export default function POSPage() {
         if (result) {
           const raw = result.getText();
           console.log("✅ ZXing 読み取り結果:", raw);
-          scanner.reset();  // ← ここを修正
+          (scanner as any).reset();
           setScanning(false);
           handleRead(raw);
         }
