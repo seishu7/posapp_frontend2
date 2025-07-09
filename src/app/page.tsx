@@ -46,22 +46,26 @@ export default function POSPage() {
     const scanner = new BrowserMultiFormatReader();
     scannerRef.current = scanner;
 
-    scanner
-  .decodeFromVideoDevice(undefined, videoRef.current!, (result, err) => {
-    if (result) {
-      const raw = result.getText();
-      console.log("✅ ZXing 読み取り結果:", raw);
-      scanner.stopContinuousDecode();
-      setScanning(false);
-      handleRead(raw);
-    }
-    if (err) {
-      console.error("スキャン中のエラー:", err);
-    }
-  })
-  .catch((err) => {
-    console.error("エラー:", err);
-  });
+    scanner.decodeFromVideoDevice(
+      undefined,
+      videoRef.current!,
+      (result, err) => {
+        if (result) {
+          const raw = result.getText();
+          console.log("✅ ZXing 読み取り結果:", raw);
+          scanner.reset();  // ← ここを修正
+          setScanning(false);
+          handleRead(raw);
+        }
+        if (err) {
+          console.error("スキャン中のエラー:", err);
+        }
+      }
+    )
+    .catch((err) => {
+      console.error("エラー:", err);
+    });
+    
 
 
     return () => {
