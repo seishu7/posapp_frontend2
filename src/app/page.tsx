@@ -56,9 +56,10 @@ export default function POSPage() {
           handleRead(raw);
         }
       })
-      .catch((err) => {
-        console.error("📷 カメラ初期化エラー:", err);
+      .catch(() => {
+        // なにもしない、または必要なエラーハンドリングを書く
       });
+      
 
     return () => {
       scannerRef.current?.reset();
