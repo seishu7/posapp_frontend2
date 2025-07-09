@@ -57,19 +57,27 @@ export default function POSPage() {
           false
         );
         
+        let hasScanned = false;
 
         scannerInstance.current.render(
           (decodedText) => {
             const cleaned = decodedText.trim().replace(/\r|\n/g, "");
         
-            // 13桁のJANコードでなければ無視
-            if (!/^\d{13}$/.test(cleaned)) {
-              console.warn("⚠️ 無効なバーコードが読み取られました:", cleaned);
+            if (!/^49\d{11}$/.test(cleaned)) {
+              console.warn("❌ 無効なバーコード:", cleaned);
               return;
             }
         
+            if (hasScanned) return;
+            hasScanned = true;
+        
+            console.log("✅ 読み取り:", cleaned);
             setCode(cleaned);
             handleRead(cleaned);
+        
+            setTimeout(() => {
+              hasScanned = false;
+            }, 3000); // 3秒間スキャン停止
           },
           (err) => {
             console.warn("スキャンエラー:", err);
