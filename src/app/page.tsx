@@ -141,12 +141,14 @@ export default function POSPage() {
       pos_no: "001",
       products: list.flatMap((item) =>
         Array(quantities[item.CODE]).fill({
+          PRD_ID: item.PRD_ID,  // ここを追加
           CODE: item.CODE,
           NAME: item.NAME,
           PRICE: item.PRICE,
         })
       ),
     };
+    
     
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/purchase`, {
