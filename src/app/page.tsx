@@ -133,17 +133,24 @@ export default function POSPage() {
   };
 
   const handlePurchase = async () => {
-    const payload = list.flatMap((item) =>
+    const productList = list.flatMap((item) =>
       Array(quantities[item.CODE]).fill({
         CODE: item.CODE,
         NAME: item.NAME,
         PRICE: item.PRICE,
       })
     );
-
+  
+    const payload = {
+      emp_cd: "9999999999",
+      store_cd: "001",
+      pos_no: "001",
+      products: productList, // ← ここが重要
+    };
+  
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/purchase?emp_cd=9999999999&store_cd=001&pos_no=001`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/purchase`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -152,7 +159,7 @@ export default function POSPage() {
       );
       if (!res.ok) throw new Error("購入登録に失敗しました");
       const data = await res.json();
-      alert(`\uD83D\uDCDD ご注文ありがとうございました！\n合計金額: ￥${data.total_amount} 円`);
+      alert(`🧾 ご注文ありがとうございました！\n合計金額: ￥${data.total_amount} 円`);
       setList([]);
       setQuantities({});
     } catch (err) {
@@ -160,6 +167,7 @@ export default function POSPage() {
       console.error(err);
     }
   };
+  
 
   const total = list.reduce(
     (sum, item) => sum + item.PRICE * (quantities[item.CODE] || 0),
