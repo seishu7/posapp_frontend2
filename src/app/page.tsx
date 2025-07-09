@@ -56,9 +56,10 @@ export default function POSPage() {
           handleRead(raw);
         }
       })
-      .catch(() => {
-        // なにもしない、または必要なエラーハンドリングを書く
+      .catch((err) => {
+        console.error("エラー:", err); // ← これで使ったことになる
       });
+      
       
 
     return () => {
