@@ -10,7 +10,7 @@ type Product = {
 };
 
 export default function POSPage() {
-  const [code, setCode] = useState("");
+  
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState("");
   const [list, setList] = useState<Product[]>([]);
@@ -85,7 +85,8 @@ export default function POSPage() {
     const newQty = (quantities[code] || 0) + delta;
     if (newQty <= 0) {
       setList(list.filter((item) => item.CODE !== code));
-      const { [code]: __, ...rest } = quantities;
+      const { [code]: __unused, ...rest } = quantities;
+      console.log(__unused);
       setQuantities(rest);
     } else {
       setQuantities({ ...quantities, [code]: newQty });
@@ -94,7 +95,8 @@ export default function POSPage() {
 
   const handleRemove = (code: string) => {
     setList(list.filter((item) => item.CODE !== code));
-    const { [code]: __, ...rest } = quantities;
+    const { [code]: __unused, ...rest } = quantities;
+    console.log(__unused);
     setQuantities(rest);
   };
 
