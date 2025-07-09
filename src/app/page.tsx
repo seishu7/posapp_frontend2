@@ -7,6 +7,7 @@ import {
   Html5QrcodeScanType,
 } from "html5-qrcode";
 
+
 type Product = {
   PRD_ID: number;
   CODE: string;
@@ -24,12 +25,11 @@ export default function POSPage() {
 
   const scannerRef = useRef<HTMLDivElement>(null);
   const scannerInstance = useRef<Html5QrcodeScanner | null>(null);
-  const hasScannedRef = useRef(false);
 
   const handleRead = useCallback(async (inputCode?: string) => {
     const targetCode = inputCode?.trim().replace(/\r|\n/g, "") || code.trim();
     if (!targetCode) return;
-
+  
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/product?code=${targetCode}`);
       if (!res.ok) throw new Error("商品が見つかりません");
@@ -37,64 +37,66 @@ export default function POSPage() {
       setProduct(data);
       setError("");
     } catch (err) {
-      console.error("\u274C \u691C\u7D22\u30A8\u30E9\u30FC:", err);
+      console.error("❌ 検索エラー:", err);
       setProduct(null);
       setError("商品マスタ未登録です");
     }
-  }, [code]);
-
-  const initializeScanner = useCallback(() => {
-    if (scannerRef.current && !scannerInstance.current) {
-      scannerInstance.current = new Html5QrcodeScanner(
-        "reader",
-        {
-          fps: 10,
-          qrbox: { width: 300, height: 150 },
-          aspectRatio: 1.5,
-          supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-          formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13],
-        },
-        false
-      );
-
-      scannerInstance.current.render(
-        (decodedText) => {
-          const cleaned = decodedText.trim().replace(/\r|\n/g, "");
-
-          if (!/^49\d{11}$/.test(cleaned)) {
-            console.warn("\u274C \u7121\u52B9\u306A\u30D0\u30FC\u30B3\u30FC\u30C9:", cleaned);
-            return;
-          }
-
-          if (hasScannedRef.current) return;
-          hasScannedRef.current = true;
-
-          console.log("\u2705 \u8AAD\u307F\u53D6\u308A:", cleaned);
-          setCode(cleaned);
-          handleRead(cleaned);
-
-          setTimeout(() => {
-            hasScannedRef.current = false;
-          }, 3000);
-        },
-        (err) => {
-          console.warn("スキャンエラー:", err);
-        }
-      );
-    }
-  }, [handleRead]);
+  }, [code]);  // ここが依存配列。codeが変わったら再生成
 
   useEffect(() => {
-    if (readerVisible) {
-      initializeScanner();
+    if (readerVisible && scannerRef.current) {
+      if (!scannerInstance.current) {
+        scannerInstance.current = new Html5QrcodeScanner(
+          "reader",
+          {
+            fps: 10,
+            qrbox: { width: 300, height: 150 },
+            aspectRatio: 1.5,
+            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+            formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13], // ← 追加
+          },
+          false
+        );
+        
+        let hasScanned = false;
+
+        scannerInstance.current.render(
+          (decodedText) => {
+            const cleaned = decodedText.trim().replace(/\r|\n/g, "");
+        
+            if (!/^49\d{11}$/.test(cleaned)) {
+              console.warn("❌ 無効なバーコード:", cleaned);
+              return;
+            }
+        
+            if (hasScanned) return;
+            hasScanned = true;
+        
+            console.log("✅ 読み取り:", cleaned);
+            setCode(cleaned);
+            handleRead(cleaned);
+        
+            setTimeout(() => {
+              hasScanned = false;
+            }, 3000); // 3秒間スキャン停止
+          },
+          (err) => {
+            console.warn("スキャンエラー:", err);
+          }
+        );
+        
+      }
     }
+
     return () => {
       if (scannerInstance.current) {
         scannerInstance.current.clear().catch(console.error);
         scannerInstance.current = null;
       }
     };
-  }, [readerVisible, initializeScanner]);
+  }, [readerVisible, handleRead]);  // ← ここに handleRead を追加
+
+  
 
   const handleAdd = () => {
     if (!product) return;
@@ -118,6 +120,7 @@ export default function POSPage() {
     if (newQty <= 0) {
       setList(list.filter((item) => item.CODE !== code));
       const { [code]: __unused, ...rest } = quantities;
+      console.log(__unused);
       setQuantities(rest);
     } else {
       setQuantities({ ...quantities, [code]: newQty });
@@ -127,24 +130,27 @@ export default function POSPage() {
   const handleRemove = (code: string) => {
     setList(list.filter((item) => item.CODE !== code));
     const { [code]: __unused, ...rest } = quantities;
+    console.log(__unused);
     setQuantities(rest);
   };
 
   const handlePurchase = async () => {
+  
     const payload = {
       emp_cd: "9999999999",
       store_cd: "001",
       pos_no: "001",
       products: list.flatMap((item) =>
         Array(quantities[item.CODE]).fill({
-          PRD_ID: item.PRD_ID,
+          PRD_ID: item.PRD_ID,  // ここをac追加
           CODE: item.CODE,
           NAME: item.NAME,
           PRICE: item.PRICE,
         })
       ),
     };
-
+    
+    
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/purchase`, {
         method: "POST",
@@ -153,8 +159,7 @@ export default function POSPage() {
       });
       if (!res.ok) throw new Error("購入登録に失敗しました");
       const data = await res.json();
-      alert(`\u2705 ご注文ありがとうございました！ 合計: ￥${data.total_amount}`);
-
+      alert(`✅ ご注文ありがとうございました！ 合計: ￥${data.total_amount}`);
       // ✅ 状態を初期化
       setList([]);
       setQuantities({});
@@ -162,15 +167,19 @@ export default function POSPage() {
       setCode("");
       setReaderVisible(true); // カメラ再起動
     } catch (err) {
-      console.error("\u274C 購入エラー:", err);
+      console.error("❌ 購入エラー:", err);
       alert("購入登録に失敗しました");
     }
   };
+  
 
   const total = list.reduce(
     (sum, item) => sum + item.PRICE * (quantities[item.CODE] || 0),
     0
   );
+
+  console.log("📦 API URL:", process.env.NEXT_PUBLIC_API_BASE_URL);
+
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6 max-w-xl mx-auto space-y-6">
@@ -219,18 +228,24 @@ export default function POSPage() {
                 <button
                   onClick={() => handleQuantity(item.CODE, -1)}
                   className="bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6"
-                >−</button>
+                >
+                  −
+                </button>
                 <span className="font-bold">{quantities[item.CODE] || 0}</span>
                 <button
                   onClick={() => handleQuantity(item.CODE, 1)}
                   className="bg-green-500 hover:bg-green-600 text-white rounded-full w-6 h-6"
-                >＋</button>
+                >
+                  ＋
+                </button>
               </div>
               <div>単価: ￥{item.PRICE}</div>
               <button
                 onClick={() => handleRemove(item.CODE)}
                 className="text-red-500 font-bold text-sm ml-2"
-              >削除</button>
+              >
+                削除
+              </button>
             </div>
             <div className="text-right font-semibold">
               小計: ￥{item.PRICE * (quantities[item.CODE] || 0)}
