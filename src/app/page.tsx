@@ -146,26 +146,27 @@ export default function POSPage() {
       emp_cd: "9999999999",
       store_cd: "001",
       pos_no: "001",
-      products: productList, // ← ここが重要
+      products: list.flatMap((item) =>
+        Array(quantities[item.CODE]).fill({
+          CODE: item.CODE,
+          NAME: item.NAME,
+          PRICE: item.PRICE,
+        })
+      ),
     };
-  
+    
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/purchase`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/purchase`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       if (!res.ok) throw new Error("購入登録に失敗しました");
       const data = await res.json();
-      alert(`🧾 ご注文ありがとうございました！\n合計金額: ￥${data.total_amount} 円`);
-      setList([]);
-      setQuantities({});
+      alert(`✅ ご注文ありがとうございました！ 合計: ￥${data.total_amount}`);
     } catch (err) {
-      alert("❌ 購入処理中にエラーが発生しました");
-      console.error(err);
+      console.error("❌ 購入エラー:", err);
+      alert("購入登録に失敗しました");
     }
   };
   
