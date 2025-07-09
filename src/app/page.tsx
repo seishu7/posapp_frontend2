@@ -47,7 +47,7 @@ export default function POSPage() {
     scannerRef.current = scanner;
 
     scanner
-  .decodeFromVideoDevice(null, videoRef.current!, (result, err) => {
+  .decodeFromVideoDevice(undefined, videoRef.current!, (result, err) => {
     if (result) {
       const raw = result.getText();
       console.log("✅ ZXing 読み取り結果:", raw);
