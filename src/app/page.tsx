@@ -196,12 +196,14 @@ export default function POSPage() {
           スキャン（カメラ）
         </button>
         {readerVisible && (
-          <div
-            id="reader"
-            ref={scannerRef}
-            className="w-full h-[300px] bg-black rounded overflow-hidden"
-          />
-        )}
+        <div className="flex justify-center items-center w-full h-[300px] bg-black rounded overflow-hidden">
+        <div
+        id="reader"
+        ref={scannerRef}
+        className="w-full max-w-md"
+      />
+    </div>
+    )}
       </div>
 
       {product && (
